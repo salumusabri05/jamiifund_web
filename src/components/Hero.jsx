@@ -64,11 +64,11 @@ export default function Hero() {
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-800 animate-fade-in">
               JamiiFund
-              <span className="block text-purple-600">Community Fundraising</span>
+              <span className="block text-purple-600">Community charity Fundraising and organisation</span>
             </h1>
             
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Connect with causes that matter and make a difference in your community
+              Connect with causes that matter and make a difference in your community , raise the funds with transparency ,effectiveness and follow up
             </p>
           </div>
           

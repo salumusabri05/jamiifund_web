@@ -180,7 +180,7 @@ export default function Header() {
           <div className="md:hidden py-4 border-t border-gray-100">
             <nav className="flex flex-col space-y-4">
               <Link 
-                href="/campaigns" 
+                href="/campaigns/explore" // Changed from "/campaigns" to "/campaigns/explore"
                 className="text-gray-600 hover:text-purple-600 transition"
                 onClick={() => setIsMenuOpen(false)}
               >

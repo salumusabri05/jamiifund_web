@@ -1,8 +1,7 @@
 // Server Component for fetching all campaigns
 import { supabase } from "@/lib/supabase";
 import CampaignCard from '@/components/CampaignCard';
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import ExplorePageLayout from './_components/ExplorePageLayout';
 
 export default async function ExploreCampaignsPage() {
   // Fetch all active campaigns using regular Supabase client
@@ -14,7 +13,11 @@ export default async function ExploreCampaignsPage() {
     
   if (error) {
     console.error("Error fetching campaigns:", error);
-    return <div>Error loading campaigns</div>;
+    return (
+      <ExplorePageLayout>
+        <div>Error loading campaigns</div>
+      </ExplorePageLayout>
+    );
   }
   
   // Transform data to match CampaignCard component props
@@ -39,18 +42,14 @@ export default async function ExploreCampaignsPage() {
   });
   
   return (
-    <div>
-      <Header />
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Explore Campaigns</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {formattedCampaigns.map(campaign => (
-            <CampaignCard key={campaign.id} campaign={campaign} />
-          ))}
-        </div>
+    <ExplorePageLayout>
+      <h1 className="text-3xl font-bold mb-8">Explore Campaigns</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {formattedCampaigns.map(campaign => (
+          <CampaignCard key={campaign.id} campaign={campaign} />
+        ))}
       </div>
-      <Footer />
-    </div>
+    </ExplorePageLayout>
   );
 }

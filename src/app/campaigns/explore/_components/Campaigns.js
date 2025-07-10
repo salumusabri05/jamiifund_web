@@ -1,6 +1,8 @@
 // Server Component for fetching all campaigns
 import { supabase } from "@/lib/supabase";
 import CampaignCard from '@/components/CampaignCard';
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 export default async function ExploreCampaignsPage() {
   // Fetch all active campaigns using regular Supabase client
@@ -37,14 +39,18 @@ export default async function ExploreCampaignsPage() {
   });
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Explore Campaigns</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {formattedCampaigns.map(campaign => (
-          <CampaignCard key={campaign.id} campaign={campaign} />
-        ))}
+    <div>
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Explore Campaigns</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {formattedCampaigns.map(campaign => (
+            <CampaignCard key={campaign.id} campaign={campaign} />
+          ))}
+        </div>
       </div>
+      <Footer />
     </div>
   );
 }

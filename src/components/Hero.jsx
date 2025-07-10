@@ -99,7 +99,7 @@ export default function Hero() {
               Start a Campaign
             </Link>
             <Link 
-              href="/campaigns" 
+              href="/campaigns/explore" 
               className="bg-white text-purple-600 font-semibold py-3 px-6 rounded-full border border-purple-600 hover:bg-purple-50 transition-all hover:shadow-md transform hover:-translate-y-1"
             >
               Explore Campaigns

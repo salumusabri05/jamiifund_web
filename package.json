@@ -2,6 +2,7 @@
   "name": "jamiifund",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -10,6 +11,9 @@
   },
   "dependencies": {
     "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.50.4",
+    "dotenv": "^17.2.0",
     "firebase": "^11.9.1",
     "next": "15.3.4",
     "react": "^19.0.0",

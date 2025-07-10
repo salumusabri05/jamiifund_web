@@ -7,6 +7,22 @@ import { useRouter } from "next/navigation";
 import { FaUser, FaEnvelope, FaLock, FaSpinner, FaCheck, FaTimes } from "react-icons/fa";
 import { auth } from "@/firebase/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { supabase } from "@/lib/supabase";
+// Import the admin client
+import { supabaseAdmin } from '@/lib/supabase-admin';
+
+const getAuthErrorMessage = (error) => {
+  switch (error.code) {
+    case 'auth/email-already-in-use':
+      return 'This email is already registered. Please log in or use a different email.';
+    case 'auth/weak-password':
+      return 'Password is too weak. Please choose a stronger password.';
+    case 'auth/invalid-email':
+      return 'Invalid email address format.';
+    default:
+      return error.message || 'An error occurred during registration.';
+  }
+};
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -89,41 +105,52 @@ export default function RegisterPage() {
     }
     
     setIsLoading(true);
+    setErrors({});
     
     try {
-      // Create user account with Firebase
+      // 1. Create user in Firebase
       const userCredential = await createUserWithEmailAndPassword(
-        auth, 
-        form.email, 
-        form.password
+        auth, form.email, form.password
       );
       
-      // Add the user's name to their profile
+      // Set display name in Firebase
       await updateProfile(userCredential.user, {
         displayName: form.name
       });
       
+      // 2. Call server API to create user in Supabase
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          firebase_uid: userCredential.user.uid,
+          email: form.email,
+          full_name: form.name,
+          password: form.password
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create user profile');
+      }
+      
       // Registration successful
       setIsSubmitted(true);
       
-      // Redirect to homepage after a brief delay
+      // Redirect after delay
       setTimeout(() => {
         router.push('/');
-      }, 2000);
+      }, 3000);
+      
     } catch (error) {
-      let errorMessage = "Registration failed. Please try again.";
-      
-      // Handle specific Firebase auth errors
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "This email is already registered. Please use a different email or sign in.";
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = "Password is too weak. Please choose a stronger password.";
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "Email address is invalid. Please check and try again.";
-      }
-      
-      setErrors({ submit: errorMessage });
       console.error("Registration error:", error);
+      setErrors({
+        submit: getAuthErrorMessage(error)
+      });
     } finally {
       setIsLoading(false);
     }

@@ -49,7 +49,7 @@ export default function Header() {
 
           {/* Desktop Navigation - hidden on mobile */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/campaigns" className="text-gray-600 hover:text-purple-600 transition">
+            <Link href="/campaigns/explore" className="text-gray-600 hover:text-purple-600 transition">
               Explore
             </Link>
             <Link href="/how-it-works" className="text-gray-600 hover:text-purple-600 transition">

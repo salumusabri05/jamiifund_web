@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { auth, db } from "@/firebase/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { FaSpinner, FaImage, FaMoneyBillWave, FaCalendarAlt } from "react-icons/fa";
+import { supabase } from "@/lib/supabase";
 
 export default function CreateCampaignPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function CreateCampaignPage() {
     coverImage: null,
     imagePreview: null
   });
+  
   
   // Check if user is authenticated
   useEffect(() => {
@@ -62,42 +64,69 @@ export default function CreateCampaignPage() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!user) {
-      setSubmitError("You must be logged in to create a campaign");
-      return;
-    }
-    
     setIsLoading(true);
     setSubmitError("");
     
     try {
-      // In a real app, you'd upload the image to storage first
-      // For simplicity, we'll just store the campaign data
+      if (!form.coverImage) {
+        throw new Error("Please select a cover image for your campaign");
+      }
       
-      const campaignData = {
-        title: form.title,
-        category: form.category,
-        goalAmount: parseFloat(form.goalAmount),
-        endDate: new Date(form.endDate),
-        description: form.description,
-        createdBy: user.uid,
-        creatorName: user.displayName || "Anonymous",
-        creatorEmail: user.email,
-        createdAt: serverTimestamp(),
-        amountRaised: 0,
-        backers: 0,
-        status: "active"
-      };
+      // 1. First upload the image to Supabase Storage
+      const imageFile = form.coverImage;
+      const fileName = `campaign-images/${Date.now()}-${imageFile.name}`;
       
-      // Add the campaign to Firestore
-      const docRef = await addDoc(collection(db, "campaigns"), campaignData);
+      // Upload to Supabase Storage bucket
+      const { data: imageData, error: imageError } = await supabase.storage
+        .from('campaign-images')
+        .upload(fileName, imageFile);
+        
+      if (imageError) {
+        console.error("Image upload error:", imageError);
+        throw new Error(`Failed to upload image: ${imageError.message}`);
+      }
       
-      // Redirect to the new campaign page
-      router.push(`/campaign/${docRef.id}`);
+      // Get the public URL for the uploaded image
+      const { data: urlData } = supabase.storage
+        .from('campaign-images')
+        .getPublicUrl(fileName);
+        
+      if (!urlData || !urlData.publicUrl) {
+        throw new Error("Failed to get public URL for uploaded image");
+      }
+      
+      const imageUrl = urlData.publicUrl;
+      
+      // 2. Insert campaign data using only firebase_uid (not created_by)
+      const { data, error } = await supabase
+        .from('campaigns')
+        .insert({
+          title: form.title,
+          description: form.description,
+          category: form.category,
+          goal_amount: parseInt(form.goalAmount),
+          end_date: form.endDate,
+          // Remove this line: created_by: user.uid, 
+          firebase_uid: user.uid,
+          image_url: imageUrl,
+          created_by_name: user.displayName || 'Anonymous',
+          is_featured: false,
+          current_amount: 0,
+          donor_count: 0
+        })
+        .select();
+      
+      if (error) {
+        console.error("Database insert error details:", JSON.stringify(error));
+        throw new Error(`Failed to save campaign: ${error.message || "Unknown database error"}`);
+      }
+      
+      // Success - redirect to campaigns page or the new campaign
+      router.push("/campaigns/explore");
+      
     } catch (error) {
       console.error("Error creating campaign:", error);
-      setSubmitError("Failed to create campaign. Please try again.");
+      setSubmitError(error.message || "Failed to create campaign. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -166,7 +195,7 @@ export default function CreateCampaignPage() {
           {/* Goal Amount */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              Goal Amount (KSH)*
+              Goal Amount (TSH)*
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">

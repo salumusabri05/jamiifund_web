@@ -53,12 +53,23 @@ export default function CampaignCard({ campaign = {}, featured = false }) {
         </div>
       )}
       
-      {/* Campaign icon placeholder */}
-      <div className="h-48 w-full bg-gradient-to-r from-purple-100 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <FaHandHoldingHeart className="mx-auto h-12 w-12 text-purple-600 mb-2" />
-          <h3 className="text-lg font-semibold text-gray-800">{category}</h3>
-        </div>
+      {/* Campaign image */}
+      <div className="h-48 w-full bg-gradient-to-r from-purple-100 to-indigo-100 overflow-hidden">
+        {campaign.imageUrl ? (
+          <img 
+            src={campaign.imageUrl} 
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-300"
+            style={{ 
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)'
+            }}
+          />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center">
+            <FaHandHoldingHeart className="h-12 w-12 text-purple-600" />
+            <h3 className="text-lg font-semibold text-gray-800">{category}</h3>
+          </div>
+        )}
       </div>
       
       <div className="p-5 bg-white">

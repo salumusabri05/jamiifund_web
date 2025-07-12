@@ -21,7 +21,7 @@ export default function Footer() {
               <a href="https://twitter.com" className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300" aria-label="Twitter">
                 <FaTwitter size={20} />
               </a>
-              <a href="https://instagram.com" className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300" aria-label="Instagram">
+              <a href="https://instagram.com/jamii_fund" className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300" aria-label="Instagram">
                 <FaInstagram size={20} />
               </a>
               <a href="https://linkedin.com" className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300" aria-label="LinkedIn">
@@ -95,16 +95,16 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start">
                 <FaEnvelope className="mt-1 mr-3 text-purple-600 dark:text-purple-400" />
-                <span className="text-gray-600 dark:text-gray-300">support@jamiifund.com</span>
+                <span className="text-gray-600 dark:text-gray-300">fundjamii@gmail.com</span>
               </li>
               <li className="flex items-start">
                 <FaPhone className="mt-1 mr-3 text-purple-600 dark:text-purple-400" />
-                <span className="text-gray-600 dark:text-gray-300">+255 123 456 789</span>
+                <span className="text-gray-600 dark:text-gray-300">+255 698959522</span>
               </li>
               <li className="flex items-start">
                 <FaMapMarkerAlt className="mt-1 mr-3 text-purple-600 dark:text-purple-400" />
                 <span className="text-gray-600 dark:text-gray-300">
-                  123 Innovation Hub, <br />
+                  MUHAS, <br />
                   Dar es Salaam, Tanzania
                 </span>
               </li>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabaseClient } from '@/lib/supabase-client';
+import { supabaseClient } from '@/lib/supabase';
 import { FaMoneyBillWave, FaHistory, FaExclamationCircle, FaCheckCircle, FaClock, FaTimes, FaInfoCircle } from 'react-icons/fa';
 
 export default function WithdrawalSection({ campaign, onWithdrawalCreated }) {

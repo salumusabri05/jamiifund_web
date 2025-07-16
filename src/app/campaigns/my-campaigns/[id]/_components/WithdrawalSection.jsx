@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabaseClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase'; // Change this from supabaseClient to supabase
 import { FaMoneyBillWave, FaHistory, FaExclamationCircle, FaCheckCircle, FaClock, FaTimes, FaInfoCircle } from 'react-icons/fa';
 
 export default function WithdrawalSection({ campaign, onWithdrawalCreated }) {
@@ -18,10 +18,10 @@ export default function WithdrawalSection({ campaign, onWithdrawalCreated }) {
     // Fetch user profile for saved payment methods
     const fetchUserProfile = async () => {
       try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          const { data, error } = await supabaseClient
+          const { data, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)
@@ -44,7 +44,7 @@ export default function WithdrawalSection({ campaign, onWithdrawalCreated }) {
     const loadWithdrawals = async () => {
       if (!campaign.withdrawals) {
         try {
-          const { data, error } = await supabaseClient
+          const { data, error } = await supabase
             .from('withdrawals')
             .select('*')
             .eq('campaign_id', campaign.id)
@@ -115,7 +115,7 @@ export default function WithdrawalSection({ campaign, onWithdrawalCreated }) {
       setError(null);
       
       // Create withdrawal request
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('withdrawals')
         .insert({
           campaign_id: campaign.id,
@@ -130,7 +130,7 @@ export default function WithdrawalSection({ campaign, onWithdrawalCreated }) {
       
       // Save Lipa Namba to user profile if user opts in
       if (paymentMethod === 'mobile_money' && document.getElementById('save-lipa-namba').checked) {
-        await supabaseClient
+        await supabase
           .from('profiles')
           .update({ lipa_namba: lipaNamba })
           .eq('id', campaign.created_by);

@@ -12,7 +12,7 @@ import DashboardStats from './_components/DashboardStats';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { FaPlus, FaFilter, FaSort } from 'react-icons/fa';
 import withAuth from '@/components/withAuth';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/context/AuthContext'; // Make sure this path is correct (singular)
 
 function MyCampaignsPage() {
   const router = useRouter();
@@ -177,157 +177,155 @@ function MyCampaignsPage() {
   
   const filteredCampaigns = getFilteredAndSortedCampaigns();
   
-  if (loading) {
+  // Show loading state during authentication or data fetching
+  if (authLoading || loading) {
     return (
       <>
         <Header />
-        <main className="bg-gray-50 min-h-screen py-12">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-center items-center h-64">
-              <LoadingSpinner size="lg" />
-            </div>
+        <div className="container mx-auto px-4 py-12">
+          <div className="flex justify-center items-center h-64">
+            <LoadingSpinner size="lg" />
           </div>
-        </main>
+        </div>
         <Footer />
       </>
     );
   }
-  
+
+  // Render content only when user is authenticated
   return (
     <>
       <Header />
-      <main className="bg-gray-50 min-h-screen py-12">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">My Campaigns</h1>
-                <p className="text-gray-600 mt-1">
-                  Manage and track all your fundraising campaigns
-                </p>
-              </div>
-              
-              <Link
-                href="/campaigns/create"
-                className="mt-4 md:mt-0 flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg transition-colors"
-              >
-                <FaPlus className="mr-2" /> Create Campaign
-              </Link>
+      <main className="container mx-auto px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Page Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">My Campaigns</h1>
+              <p className="text-gray-600 mt-1">
+                Manage and track all your fundraising campaigns
+              </p>
             </div>
             
-            {/* Dashboard Stats */}
-            <DashboardStats stats={stats} />
+            <Link
+              href="/campaigns/create"
+              className="mt-4 md:mt-0 flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg transition-colors"
+            >
+              <FaPlus className="mr-2" /> Create Campaign
+            </Link>
+          </div>
+          
+          {/* Dashboard Stats */}
+          <DashboardStats stats={stats} />
+          
+          {/* Campaign Filters */}
+          <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+              <div className="flex items-center mb-4 md:mb-0">
+                <span className="text-gray-700 font-medium mr-4">
+                  {filteredCampaigns.length} {filteredCampaigns.length === 1 ? 'Campaign' : 'Campaigns'}
+                </span>
+                
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center text-gray-600 hover:text-purple-600 bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-1.5 transition-colors"
+                >
+                  <FaFilter className="mr-2" /> Filter
+                </button>
+              </div>
+              
+              <div className="flex items-center">
+                <span className="text-gray-600 mr-2">Sort by:</span>
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="most-funded">Most Funded</option>
+                  <option value="ending-soon">Ending Soon</option>
+                </select>
+              </div>
+            </div>
             
-            {/* Campaign Filters */}
-            <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                <div className="flex items-center mb-4 md:mb-0">
-                  <span className="text-gray-700 font-medium mr-4">
-                    {filteredCampaigns.length} {filteredCampaigns.length === 1 ? 'Campaign' : 'Campaigns'}
-                  </span>
-                  
+            {/* Expanded Filters */}
+            {showFilters && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="flex items-center text-gray-600 hover:text-purple-600 bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-1.5 transition-colors"
+                    onClick={() => setFilterOption('all')}
+                    className={`px-4 py-2 rounded-full text-sm ${
+                      filterOption === 'all'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
                   >
-                    <FaFilter className="mr-2" /> Filter
+                    All Campaigns
+                  </button>
+                  <button
+                    onClick={() => setFilterOption('active')}
+                    className={`px-4 py-2 rounded-full text-sm ${
+                      filterOption === 'active'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Active
+                  </button>
+                  <button
+                    onClick={() => setFilterOption('funded')}
+                    className={`px-4 py-2 rounded-full text-sm ${
+                      filterOption === 'funded'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Fully Funded
+                  </button>
+                  <button
+                    onClick={() => setFilterOption('completed')}
+                    className={`px-4 py-2 rounded-full text-sm ${
+                      filterOption === 'completed'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Completed
                   </button>
                 </div>
-                
-                <div className="flex items-center">
-                  <span className="text-gray-600 mr-2">Sort by:</span>
-                  <select
-                    value={sortOption}
-                    onChange={(e) => setSortOption(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="newest">Newest</option>
-                    <option value="oldest">Oldest</option>
-                    <option value="most-funded">Most Funded</option>
-                    <option value="ending-soon">Ending Soon</option>
-                  </select>
-                </div>
-              </div>
-              
-              {/* Expanded Filters */}
-              {showFilters && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setFilterOption('all')}
-                      className={`px-4 py-2 rounded-full text-sm ${
-                        filterOption === 'all'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      All Campaigns
-                    </button>
-                    <button
-                      onClick={() => setFilterOption('active')}
-                      className={`px-4 py-2 rounded-full text-sm ${
-                        filterOption === 'active'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      Active
-                    </button>
-                    <button
-                      onClick={() => setFilterOption('funded')}
-                      className={`px-4 py-2 rounded-full text-sm ${
-                        filterOption === 'funded'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      Fully Funded
-                    </button>
-                    <button
-                      onClick={() => setFilterOption('completed')}
-                      className={`px-4 py-2 rounded-full text-sm ${
-                        filterOption === 'completed'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      Completed
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Campaign List */}
-            {filteredCampaigns.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCampaigns.map(campaign => (
-                  <CampaignCard key={campaign.id} campaign={campaign} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                <h3 className="text-xl font-bold text-gray-700 mb-2">No campaigns found</h3>
-                <p className="text-gray-600 mb-6">
-                  {filterOption !== 'all' 
-                    ? `You don't have any ${filterOption} campaigns. Try a different filter.` 
-                    : "You haven't created any campaigns yet."}
-                </p>
-                <Link
-                  href="/campaigns/create"
-                  className="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg transition-colors"
-                >
-                  <FaPlus className="mr-2" /> Create Your First Campaign
-                </Link>
               </div>
             )}
-          </motion.div>
-        </div>
+          </div>
+          
+          {/* Campaign List */}
+          {filteredCampaigns.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCampaigns.map(campaign => (
+                <CampaignCard key={campaign.id} campaign={campaign} />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+              <h3 className="text-xl font-bold text-gray-700 mb-2">No campaigns found</h3>
+              <p className="text-gray-600 mb-6">
+                {filterOption !== 'all' 
+                  ? `You don't have any ${filterOption} campaigns. Try a different filter.` 
+                  : "You haven't created any campaigns yet."}
+              </p>
+              <Link
+                href="/campaigns/create"
+                className="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg transition-colors"
+              >
+                <FaPlus className="mr-2" /> Create Your First Campaign
+              </Link>
+            </div>
+          )}
+        </motion.div>
       </main>
       <Footer />
     </>

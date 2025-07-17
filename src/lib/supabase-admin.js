@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Create a separate admin client with service_role key
-const supabaseUrl = 'https://mavaujxjkzyuhphpgtue.supabase.co';
-const supabaseServiceKey= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hdmF1anhqa3p5dWhwaHBndHVlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTYyNzc1MiwiZXhwIjoyMDY1MjAzNzUyfQ.COa3zYBPHAHEYJvpUwqxQ9k97FUMyahuhT5T-cPM9vw'
+// Server-side only - this file should never be imported in client components
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Required Supabase environment variables are missing');
+}
 
-export { supabaseAdmin };
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);

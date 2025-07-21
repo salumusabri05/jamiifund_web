@@ -14,6 +14,7 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isResourcesMenuOpen, setIsResourcesMenuOpen] = useState(false);
   
   // Listen for authentication state changes
   useEffect(() => {
@@ -63,11 +64,11 @@ export default function Header() {
             <div className="relative group">
               <button 
                 className="flex items-center text-gray-600 hover:text-purple-600 transition"
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                onClick={() => setIsResourcesMenuOpen(!isResourcesMenuOpen)}
               >
                 Resources <FaChevronDown className="ml-1 text-xs" />
               </button>
-              <div className={`absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden transition-all duration-300 ${isUserMenuOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+              <div className={`absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden transition-all duration-300 ${isResourcesMenuOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
                 <Link href="/blog" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">
                   Blog
                 </Link>

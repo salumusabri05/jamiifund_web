@@ -12,7 +12,10 @@ import DashboardStats from './_components/DashboardStats';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { FaPlus, FaFilter, FaSort } from 'react-icons/fa';
 import withAuth from '@/components/withAuth';
-import { useAuth } from '@/context/AuthContext'; // Make sure this path is correct (singular)
+import { useAuth } from '@/context/AuthContext';
+import { ErrorBoundary } from 'react-error-boundary';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function MyCampaignsPage() {
   const router = useRouter();
@@ -48,26 +51,36 @@ function MyCampaignsPage() {
     try {
       setLoading(true);
       
-      // Get campaigns created by the user
+      // First fetch only the campaigns
       const { data: campaignsData, error } = await supabase
         .from('campaigns')
-        .select(`
-          *,
-          donations(count, amount),
-          withdrawals(*)
-        `)
+        .select('*')
         .eq('created_by', userId);
       
       if (error) {
         console.error('Error fetching campaigns:', error);
         setLoading(false);
+        toast.error(`Failed to load campaigns: ${error.message || 'Unknown error'}`);
+        setCampaigns([]);
         return;
       }
-      
-      // Process campaigns data
-      const today = new Date();
-      const processedCampaigns = campaignsData.map(campaign => {
+
+      // Process each campaign and fetch related data separately
+      const processedCampaigns = await Promise.all(campaignsData.map(async (campaign) => {
+        // Fetch donations for this campaign
+        const { data: donations } = await supabase
+          .from('donations')
+          .select('*')
+          .eq('campaign_id', campaign.id);
+        
+        // Fetch withdrawals for this campaign
+        const { data: withdrawals } = await supabase
+          .from('withdrawals')
+          .select('*')
+          .eq('campaign_id', campaign.id);
+        
         // Calculate days left
+        const today = new Date();
         const endDate = new Date(campaign.end_date);
         const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
         
@@ -75,21 +88,21 @@ function MyCampaignsPage() {
         let totalDonations = 0;
         let donorCount = 0;
         
-        if (campaign.donations && campaign.donations.length > 0) {
-          totalDonations = campaign.donations.reduce((sum, donation) => sum + (donation.amount || 0), 0);
-          donorCount = campaign.donations.length;
+        if (donations && donations.length > 0) {
+          totalDonations = donations.reduce((sum, donation) => sum + (donation.amount || 0), 0);
+          donorCount = donations.length;
         }
         
         // Calculate total withdrawals
-        const totalWithdrawals = campaign.withdrawals 
-          ? campaign.withdrawals
+        const totalWithdrawals = withdrawals 
+          ? withdrawals
               .filter(w => w.status === 'completed')
               .reduce((sum, w) => sum + w.amount, 0)
           : 0;
         
         // Calculate pending withdrawals
-        const pendingWithdrawals = campaign.withdrawals 
-          ? campaign.withdrawals
+        const pendingWithdrawals = withdrawals 
+          ? withdrawals
               .filter(w => w.status === 'pending')
               .reduce((sum, w) => sum + w.amount, 0)
           : 0;
@@ -107,6 +120,8 @@ function MyCampaignsPage() {
         
         return {
           ...campaign,
+          donations: donations || [],
+          withdrawals: withdrawals || [],
           daysLeft,
           totalDonations,
           donorCount,
@@ -115,7 +130,7 @@ function MyCampaignsPage() {
           availableForWithdrawal,
           status
         };
-      });
+      }));
       
       // Calculate overall stats
       const activeCount = processedCampaigns.filter(c => c.status === 'active').length;
@@ -141,6 +156,7 @@ function MyCampaignsPage() {
     } catch (error) {
       console.error('Error processing campaigns:', error);
       setLoading(false);
+      toast.error(`An unexpected error occurred: ${error.message || 'Unknown error'}`);
     }
   };
   
@@ -303,31 +319,40 @@ function MyCampaignsPage() {
           </div>
           
           {/* Campaign List */}
-          {filteredCampaigns.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCampaigns.map(campaign => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <h3 className="text-xl font-bold text-gray-700 mb-2">No campaigns found</h3>
-              <p className="text-gray-600 mb-6">
-                {filterOption !== 'all' 
-                  ? `You don't have any ${filterOption} campaigns. Try a different filter.` 
-                  : "You haven't created any campaigns yet."}
-              </p>
-              <Link
-                href="/campaigns/create"
-                className="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg transition-colors"
-              >
-                <FaPlus className="mr-2" /> Create Your First Campaign
-              </Link>
-            </div>
-          )}
+          <ErrorBoundary
+            FallbackComponent={({error}) => (
+              <div className="p-4 bg-red-50 text-red-700 rounded-lg">
+                Failed to load campaigns: {error.message}
+              </div>
+            )}
+          >
+            {filteredCampaigns.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCampaigns.map(campaign => (
+                  <CampaignCard key={campaign.id} campaign={campaign} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <h3 className="text-xl font-bold text-gray-700 mb-2">No campaigns found</h3>
+                <p className="text-gray-600 mb-6">
+                  {filterOption !== 'all' 
+                    ? `You don't have any ${filterOption} campaigns. Try a different filter.` 
+                    : "You haven't created any campaigns yet."}
+                </p>
+                <Link
+                  href="/campaigns/create"
+                  className="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg transition-colors"
+                >
+                  <FaPlus className="mr-2" /> Create Your First Campaign
+                </Link>
+              </div>
+            )}
+          </ErrorBoundary>
         </motion.div>
       </main>
       <Footer />
+      <ToastContainer position="bottom-right" />
     </>
   );
 }

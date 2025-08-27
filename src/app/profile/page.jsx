@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { updateProfile } from 'firebase/auth';
-import { auth } from '@/firebase/firebase';
 import { FaUser, FaPhone, FaEnvelope, FaExclamationCircle, FaCheck } from 'react-icons/fa';
 import Image from 'next/image';
 import Link from 'next/link';

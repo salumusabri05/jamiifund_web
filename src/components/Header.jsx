@@ -4,32 +4,23 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FaSearch, FaBars, FaTimes, FaUser, FaChevronDown, FaSignOutAlt } from "react-icons/fa";
-import { auth } from "@/firebase/firebase";
-import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function Header() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [isResourcesMenuOpen, setIsResourcesMenuOpen] = useState(false);
+  const supabase = createClientComponentClient();
   
-  // Listen for authentication state changes
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((authUser) => {
-      setUser(authUser);
-    });
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
-
   // Handle sign out
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      await supabase.auth.signOut();
       setIsUserMenuOpen(false);
       router.push('/');
     } catch (error) {

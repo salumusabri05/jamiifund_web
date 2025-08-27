@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { FaUsers, FaExclamationCircle, FaCheckCircle, 
          FaList, FaMoneyBill, FaTimesCircle, FaSearch,

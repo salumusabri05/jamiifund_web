@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthContextProvider } from '@/context/AuthContext'; // Make sure path is correct
+import { AuthProvider } from '@/contexts/AuthContext';
 import ClientOnly from './ClientOnly';
 
 export default function withAuth(Component) {

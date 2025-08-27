@@ -10,9 +10,9 @@ export default function withAuth(Component) {
   return function AuthenticatedComponent(props) {
     return (
       <ClientOnly>
-        <AuthContextProvider>
+        <AuthProvider>
           <Component {...props} />
-        </AuthContextProvider>
+        </AuthProvider>
       </ClientOnly>
     );
   };

@@ -86,13 +86,6 @@ export default function UserProfile() {
     setIsLoading(true);
     
     try {
-      // Update Firebase display name
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, {
-          displayName: formData.fullName
-        });
-      }
-      
       // Update Supabase profile
       const { error } = await supabase
         .from('profiles')
@@ -114,7 +107,7 @@ export default function UserProfile() {
           username: formData.username,
           updated_at: new Date().toISOString()
         })
-        .eq('id', user.uid);
+        .eq('id', user.id);
         
       if (error) throw error;
       

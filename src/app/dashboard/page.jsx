@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import Header from '@/components/Header';
@@ -13,6 +13,27 @@ import { FaChartLine, FaCreditCard, FaUsers, FaExclamationCircle,
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
+  console.log('Dashboard user:', user);
+
+  if (!user && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="container mx-auto px-4">
+          <div className="bg-white rounded-lg shadow-md p-8 max-w-md mx-auto text-center">
+            <FaExclamationCircle className="text-5xl text-purple-600 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-4">Access Required</h2>
+            <p className="text-gray-600 mb-6">Please sign in to access your dashboard.</p>
+            <Link 
+              href="/login?redirect=/dashboard" 
+              className="rounded-full bg-purple-600 px-6 py-3 text-white hover:bg-purple-700 transition"
+            >
+              Log In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [userCampaigns, setUserCampaigns] = useState([]);
   const [stats, setStats] = useState({
     totalRaised: 0,
@@ -79,7 +100,7 @@ export default function Dashboard() {
         const { data, error } = await supabase
           .from('admin_roles')
           .select('role, permissions')
-          .eq('user_id', user.uid);
+          .eq('user_id', user.id);
           
         if (error) {
           console.error('Error checking admin status:', error);
@@ -111,7 +132,7 @@ export default function Dashboard() {
         const { data: campaigns, error } = await supabase
           .from('campaigns')
           .select('*, donations(*)')
-          .eq('created_by', user.uid);
+          .eq('created_by', user.id);
           
         if (error) throw error;
         
@@ -119,7 +140,7 @@ export default function Dashboard() {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.uid)
+          .eq('id', user.id)
           .single();
           
         if (profileError && profileError.code !== 'PGRST116') {
@@ -130,7 +151,7 @@ export default function Dashboard() {
         const { data: payment, error: paymentError } = await supabase
           .from('payment_methods')
           .select('*')
-          .eq('user_id', user.uid)
+          .eq('user_id', user.id)
           .single();
           
         if (paymentError && paymentError.code !== 'PGRST116') {
@@ -141,7 +162,7 @@ export default function Dashboard() {
         const { data: verification, error: verificationError } = await supabase
           .from('verifications')
           .select('*')
-          .eq('user_id', user.uid)
+          .eq('user_id', user.id)
           .single();
           
         if (verificationError && verificationError.code !== 'PGRST116') {
@@ -310,7 +331,7 @@ export default function Dashboard() {
       
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.uid}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `avatar/${fileName}`;
       
       // Upload the file to Supabase Storage
@@ -347,7 +368,7 @@ export default function Dashboard() {
       
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.uid}-id-front-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${user.id}-id-front-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `verifications/${fileName}`;
       
       // Upload the file to Supabase Storage
@@ -384,7 +405,7 @@ export default function Dashboard() {
       
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.uid}-id-back-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${user.id}-id-back-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `verifications/${fileName}`;
       
       // Upload the file to Supabase Storage
@@ -413,41 +434,82 @@ export default function Dashboard() {
   };
   
   const saveProfileData = async () => {
-    if (!user) return;
-    
+    if (!user) {
+      showNotification('No user found. Cannot save profile.', 'error');
+      return;
+    }
+    setIsLoading(true);
     try {
-      const { error } = await supabase
+      console.log('Current user:', user);
+      const payload = {
+        id: user.id, // Supabase uses 'id', not 'uid'
+        full_name: profileData.fullName,
+        email: profileData.email,
+        phone: profileData.phone,
+        bio: profileData.bio,
+        location: profileData.location,
+        website: profileData.website,
+        address: profileData.address,
+        city: profileData.city,
+        region: profileData.region,
+        postal_code: profileData.postalCode,
+        is_organization: profileData.isOrganization,
+        organization_name: profileData.organizationName,
+        organization_reg_number: profileData.organizationRegNumber,
+        organization_type: profileData.organizationType,
+        organization_description: profileData.organizationDescription,
+        username: profileData.username,
+        avatar_url: profileData.avatarUrl,
+        updated_at: new Date().toISOString()
+      };
+      console.log('Attempting to upsert profile with payload:', payload);
+      const { data, error } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.uid,
-          full_name: profileData.fullName,
-          email: profileData.email,
-          phone: profileData.phone,
-          bio: profileData.bio,
-          location: profileData.location,
-          website: profileData.website,
-          address: profileData.address,
-          city: profileData.city,
-          region: profileData.region,
-          postal_code: profileData.postalCode,
-          is_organization: profileData.isOrganization,
-          organization_name: profileData.organizationName,
-          organization_reg_number: profileData.organizationRegNumber,
-          organization_type: profileData.organizationType,
-          organization_description: profileData.organizationDescription,
-          username: profileData.username,
-          avatar_url: profileData.avatarUrl,
-          updated_at: new Date().toISOString()
-        });
-        
-      if (error) throw error;
-      
-      setIsEditingProfile(false);
-      showNotification('Profile information saved successfully');
+        .upsert(payload, { onConflict: 'id' });
+      if (error) {
+        console.error('Supabase upsert error:', error);
+        showNotification('Failed to save profile information: ' + error.message, 'error');
+      } else {
+        // Refetch profile from DB to ensure UI shows latest details
+        const { data: updatedProfile, error: fetchError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        if (fetchError) {
+          console.error('Error fetching updated profile:', fetchError);
+          showNotification('Saved, but failed to fetch updated profile: ' + fetchError.message, 'error');
+        } else if (updatedProfile) {
+          setProfileData({
+            fullName: updatedProfile.full_name || '',
+            email: updatedProfile.email || '',
+            phone: updatedProfile.phone || '',
+            bio: updatedProfile.bio || '',
+            location: updatedProfile.location || '',
+            website: updatedProfile.website || '',
+            address: updatedProfile.address || '',
+            city: updatedProfile.city || '',
+            region: updatedProfile.region || '',
+            postalCode: updatedProfile.postal_code || '',
+            isOrganization: updatedProfile.is_organization || false,
+            organizationName: updatedProfile.organization_name || '',
+            organizationRegNumber: updatedProfile.organization_reg_number || '',
+            organizationType: updatedProfile.organization_type || '',
+            organizationDescription: updatedProfile.organization_description || '',
+            username: updatedProfile.username || '',
+            avatarUrl: updatedProfile.avatar_url || ''
+          });
+          setIsEditingProfile(false);
+          showNotification('Profile information saved successfully', 'success');
+        } else {
+          showNotification('Saved, but no updated profile returned.', 'error');
+        }
+      }
     } catch (error) {
       console.error('Error saving profile:', error);
-      showNotification('Failed to save profile information', 'error');
+      showNotification('Failed to save profile information: ' + error.message, 'error');
     }
+    setIsLoading(false);
   };
   
   const savePaymentData = async () => {
@@ -457,7 +519,7 @@ export default function Dashboard() {
       const { error } = await supabase
         .from('payment_methods')
         .upsert({
-          user_id: user.uid,
+          user_id: user.id,
           bank_name: paymentData.bankName,
           bank_account_number: paymentData.bankAccountNumber,
           account_name: paymentData.accountName,
@@ -495,7 +557,7 @@ export default function Dashboard() {
       const { error } = await supabase
         .from('verifications')
         .upsert({
-          user_id: user.uid,
+          user_id: user.id,
           id_type: verificationData.idType,
           id_number: verificationData.idNumber,
           id_front_url: verificationData.idFrontUrl,
@@ -527,7 +589,7 @@ export default function Dashboard() {
         .from('verifications')
         .update({
           status: 'approved',
-          verified_by: user.uid,
+          verified_by: user.id,
           verified_at: new Date().toISOString()
         })
         .eq('id', id);
@@ -566,7 +628,7 @@ export default function Dashboard() {
         .update({
           status: 'rejected',
           rejection_reason: reason,
-          verified_by: user.uid,
+          verified_by: user.id,
           verified_at: new Date().toISOString()
         })
         .eq('id', id);

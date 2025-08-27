@@ -5,22 +5,20 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaUser, FaEnvelope, FaLock, FaSpinner, FaCheck, FaTimes } from "react-icons/fa";
-import { auth } from "@/firebase/firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 // Use client-side supabase instance for client operations
 import { supabase } from '@/lib/supabase';
 
 const getAuthErrorMessage = (error) => {
-  switch (error.code) {
-    case 'auth/email-already-in-use':
+  if (error.message) {
+    if (error.message.includes('already registered')) {
       return 'This email is already registered. Please log in or use a different email.';
-    case 'auth/weak-password':
+    } else if (error.message.includes('password')) {
       return 'Password is too weak. Please choose a stronger password.';
-    case 'auth/invalid-email':
+    } else if (error.message.includes('email')) {
       return 'Invalid email address format.';
-    default:
-      return error.message || 'An error occurred during registration.';
+    }
   }
+  return error.message || 'An error occurred during registration.';
 };
 
 export default function RegisterPage() {
@@ -98,41 +96,42 @@ export default function RegisterPage() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      // 1. Create user in Firebase
-      const userCredential = await createUserWithEmailAndPassword(
-        auth, form.email, form.password
-      );
-      
-      // Set display name in Firebase
-      await updateProfile(userCredential.user, {
-        displayName: form.name
+      // Create user in Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            full_name: form.name,
+          }
+        }
       });
       
-      // 2. Call server API to create user in Supabase
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          firebase_uid: userCredential.user.uid,
+      if (error) throw error;
+      
+      console.log("User registration successful:", data);
+      
+      // Create profile in Supabase
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
           email: form.email,
           full_name: form.name,
-          password: form.password
-        })
-      });
+          updated_at: new Date().toISOString()
+        });
       
-      // Debug info
-      console.log('API response status:', response.status);
       
-      const data = await response.json();
-      console.log('API response data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create user profile');
+      if (profileError) {
+        console.error("Error creating profile:", profileError);
       }
       
       // Registration successful
@@ -147,19 +146,6 @@ export default function RegisterPage() {
       console.error("Registration error:", error);
       setErrors({
         submit: getAuthErrorMessage(error)
-      });
-      
-      // Check if the error is from the API but the accounts were created anyway
-      if (error.message === 'Failed to create user profile' && auth.currentUser) {
-        console.log("User accounts were created despite error, proceeding with login");
-        // We can still proceed since accounts were created
-        router.push('/dashboard');
-        return;
-      }
-      
-      // Handle actual errors
-      setErrors({
-        submit: error.message
       });
     } finally {
       setIsLoading(false);

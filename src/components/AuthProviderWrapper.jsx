@@ -1,7 +1,7 @@
 "use client";
 
-import { AuthContextProvider } from '@/context/AuthContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export default function AuthProviderWrapper({ children }) {
-  return <AuthContextProvider>{children}</AuthContextProvider>;
+  return <AuthProvider>{children}</AuthProvider>;
 }

@@ -5,8 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaEnvelope, FaLock, FaSpinner } from "react-icons/fa";
-import { auth } from "@/firebase/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,25 +43,32 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Sign in with Firebase
-      await signInWithEmailAndPassword(auth, form.email, form.password);
+      // Sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password
+      });
+      
+      if (error) throw error;
 
+      console.log("Supabase login successful:", data);
+      
       // Redirect to home page after successful login
       router.push("/");
     } catch (error) {
       let errorMessage = "Invalid email or password";
 
-      // Handle specific Firebase auth errors
-      if (
-        error.code === "auth/user-not-found" ||
-        error.code === "auth/wrong-password"
-      ) {
-        errorMessage = "Invalid email or password. Please try again.";
-      } else if (error.code === "auth/too-many-requests") {
-        errorMessage =
-          "Too many unsuccessful login attempts. Please try again later.";
-      } else if (error.code === "auth/user-disabled") {
-        errorMessage = "This account has been disabled. Please contact support.";
+      // Handle Supabase auth errors
+      if (error.message) {
+        if (error.message.includes("Invalid login")) {
+          errorMessage = "Invalid email or password. Please try again.";
+        } else if (error.message.includes("too many requests")) {
+          errorMessage = "Too many unsuccessful login attempts. Please try again later.";
+        } else if (error.message.includes("User is disabled")) {
+          errorMessage = "This account has been disabled. Please contact support.";
+        } else {
+          errorMessage = error.message;
+        }
       }
 
       setErrors({ submit: errorMessage });
